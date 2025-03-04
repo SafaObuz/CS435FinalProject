@@ -8,17 +8,18 @@ import torch.nn.functional as F
 import argparse
 import os
 from dataset import DIV2KDataset
-from DAT import DualAggregationTransformer  # Import the model from DAT.py
+from DAT import DAT # Import the model from DAT.py
 
 # Argument Parsing
 def parse_args():
     parser = argparse.ArgumentParser(description="Train the Dual Aggregation Transformer for Image Super-Resolution")
-    parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training')
+    parser.add_argument('--batch_size', type=int, default=4, help='Batch size for training')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for optimizer')
     parser.add_argument('--num_epochs', type=int, default=20, help='Number of training epochs')
     parser.add_argument('--dataset_path', type=str, default='./dataset', help='Path to the DIV2K training dataset')
     parser.add_argument('--save_model', type=str, default='./checkpoints/model_epoch.pth', help='Path to save the trained model')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of workers for data loading')  # Add num_workers argument
+    parser.add_argument('--num_upscale', type=int, default=2, help='Number of times to upscale images during training')
     return parser.parse_args()
 
 def get_data_loaders(hr_dir, lr_dir, batch_size, num_workers):
@@ -43,8 +44,8 @@ def main():
     # Device setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Model Initialization
-    model = DualAggregationTransformer(in_channels=3, out_channels=3, num_heads=8, num_layers=4, embed_size=256).to(device)
+    # Model Initialization with dynamic upscaling parameter
+    model = DAT(upsample_steps=args.num_upscale).to(device)
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
@@ -52,8 +53,10 @@ def main():
     # Learning Rate Scheduler (optional)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-    # Loss Function
+    # Loss Function (MSE loss, but you can also try perceptual loss for better image quality)
     def loss_fn(pred, target):
+        # Resize the target to match the predicted output size
+        target = F.interpolate(target, size=pred.shape[2:], mode='bilinear', align_corners=False)
         return F.mse_loss(pred, target)
 
     print("Start Training.......................")

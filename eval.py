@@ -6,12 +6,12 @@ import torch.nn.functional as F
 import math
 import os
 import argparse
-from DAT import DualAggregationTransformer  # Import your model
+from DAT import DAT  # Import your model
 
 # Argument Parsing
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate and upscale images using the DAT model")
-    parser.add_argument('--batch_size', type=int, default=16, help='Batch size for evaluation')
+    parser.add_argument('--batch_size', type=int, default=1, help='Batch size for evaluation')
     parser.add_argument('--dataset_path', type=str, required=True, help='Path to the test dataset (low-resolution images)')
     parser.add_argument('--model_checkpoint', type=str, required=True, help='Path to the trained model checkpoint')
     parser.add_argument('--save_dir', type=str, default='./upscale', help='Directory to save upscaled images')
@@ -54,6 +54,7 @@ class DIV2KEvalDataset(torch.utils.data.Dataset):
 
 def main():
     # Parse arguments
+    torch.cuda.empty_cache()
     args = parse_args()
     
     # Create save directory
@@ -80,38 +81,49 @@ def main():
 
     # Load the trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = DualAggregationTransformer(in_channels=3, out_channels=3, num_heads=8, num_layers=4, embed_size=1080).to(device)
+    model = DAT(upsample_steps=3).to(device)
     model.load_state_dict(torch.load(args.model_checkpoint, map_location=device))
     model.eval()
 
     # Evaluation and saving upscaled images
     with torch.no_grad():
+        total_psnr = 0.0
+        total_images = 0
+        
         for lr_images, filenames in test_loader:
             if lr_images is None:  # Skip None images due to errors
                 continue
 
             lr_images = lr_images.to(device)
 
-            # Generate super-resolution images
-            sr_images = model(lr_images)
+            with torch.cuda.amp.autocast():
+                sr_images = model(lr_images)
             sr_images = sr_images.clamp(-1, 1)  # Ensure valid pixel values
 
-            # Resize output to selected resolution
+            # Compute PSNR for each image
             for i in range(len(filenames)):
                 img = sr_images[i].cpu().permute(1, 2, 0).numpy()  # Convert to NumPy
                 img = ((img + 1) / 2 * 255).astype('uint8')  # Denormalize and scale
 
                 # Convert to PIL Image for resizing
-                img = Image.fromarray(img)
+                img_pil = Image.fromarray(img)
 
                 # Resize the image to desired output resolution
-                img = img.resize(output_resolution, Image.BICUBIC)
+                img_pil = img_pil.resize(output_resolution, Image.BICUBIC)
 
                 # Ensure filename has extension (if not, add it)
                 if not filenames[i].lower().endswith(('.png', '.jpg', '.jpeg')):
                     filenames[i] += '.png'
 
-                img.save(os.path.join(args.save_dir, filenames[i]))  # Save image
+                img_pil.save(os.path.join(args.save_dir, filenames[i]))  # Save image
+
+                # Optionally calculate PSNR for evaluation
+                # Here you can provide target HR images if available
+                # Example: total_psnr += psnr(sr_images[i], target_hr_image)  # Assume you have target HR images
+                total_images += 1
+
+        # Print PSNR if target images are available
+        # Example: print(f"Average PSNR: {total_psnr / total_images} dB")
 
     print(f"Upscaled images saved to {args.save_dir}")
 
