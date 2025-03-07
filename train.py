@@ -7,8 +7,9 @@ from PIL import Image
 import torch.nn.functional as F
 import argparse
 import os
+import matplotlib.pyplot as plt  # Importing for plotting
 from dataset import DIV2KDataset
-from DAT import DAT # Import the model from DAT.py
+from DAT import DAT  # Import the model from DAT.py
 
 # Argument Parsing
 def parse_args():
@@ -60,6 +61,10 @@ def main():
         return F.mse_loss(pred, target)
 
     print("Start Training.......................")
+    
+    # Store losses for plotting
+    epoch_losses = []
+
     # Training Loop
     for epoch in range(args.num_epochs):
         model.train()
@@ -83,13 +88,28 @@ def main():
             running_loss += loss.item()
 
         # Print loss
-        print(f"Epoch [{epoch+1}/{args.num_epochs}], Loss: {running_loss / len(train_loader)}")
-        
+        avg_loss = running_loss / len(train_loader)
+        print(f"Epoch [{epoch+1}/{args.num_epochs}], Loss: {avg_loss}")
+
         # Save the model after each epoch
         torch.save(model.state_dict(), f'{args.save_model}_epoch_{epoch+1}.pth')
 
         # Step the scheduler
         scheduler.step()
+
+        # Store the loss for plotting
+        epoch_losses.append(avg_loss)
+
+    # Plot the training loss curve
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, args.num_epochs + 1), epoch_losses, marker='o', linestyle='-', color='b', label='Training Loss')
+    plt.title('Training Loss Curve')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('training_loss_curve.png')  # Save the plot
+    plt.show()
 
 if __name__ == '__main__':
     main()
