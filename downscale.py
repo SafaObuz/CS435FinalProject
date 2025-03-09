@@ -1,5 +1,6 @@
 from PIL import Image
 import os
+import argparse
 
 def downscale_images(hr_folder, lr_folder, scale_factor=2):
     """
@@ -28,7 +29,16 @@ def downscale_images(hr_folder, lr_folder, scale_factor=2):
         
     print(f"Generated LR images saved in {lr_folder}")
 
-# Usage example
-hr_folder = './dataset/DIV2K_valid_HR'  # Path to your high-resolution image folder
-lr_folder = './dataset/DIV2K_valid_LR'  # Path to save low-resolution images
-downscale_images(hr_folder, lr_folder, scale_factor=2)  # 2x downscaling
+def main():
+    parser = argparse.ArgumentParser(
+        description="Downscale high-resolution images to generate low-resolution images."
+    )
+    parser.add_argument("hr_folder", type=str, help="Path to the folder containing high-resolution images")
+    parser.add_argument("lr_folder", type=str, help="Path to the folder where low-resolution images will be saved")
+    parser.add_argument("--scale_factor", type=int, default=2, help="Downscaling factor (default: 2)")
+    
+    args = parser.parse_args()
+    downscale_images(args.hr_folder, args.lr_folder, args.scale_factor)
+
+if __name__ == '__main__':
+    main()

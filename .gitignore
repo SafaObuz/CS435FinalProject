@@ -1,0 +1,11 @@
+*.zip
+.vscode
+__pycache__
+venv/
+dataset/DIV2K_train_HR/*
+!dataset/DIV2K_train_HR/.gitkeep
+dataset/DIV2K_valid_HR/*
+!dataset/DIV2K_valid_HR/.gitkeep
+dataset/DIV2K_train_LR/*
+dataset/DIV2K_valid_LR/*
+safa_100_epoch_results
