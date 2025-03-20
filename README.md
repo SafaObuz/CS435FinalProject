@@ -58,4 +58,4 @@ to generate the low-resolution training and validation set.
 
 Safa: I ran this lol
 
-`python train.py --batch_size 16 --num_epochs 100 --dataset_path './dataset' --save_model './safa_100_epoch_results/model_epoch.pth' --num_workers 8`
+`python train.py --batch_size 16 --num_epochs 100 --dataset_path dataset --save_model './safa_100_epoch_results/model_epoch.pth' --num_workers 8`
