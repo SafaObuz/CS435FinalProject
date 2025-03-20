@@ -40,8 +40,16 @@ def main():
     args = parse_args()
 
     # Get training data loaders
-    train_loader = get_data_loaders(args.dataset_path + '/DIV2K_train_HR', args.dataset_path + '/DIV2K_train_LR', args.batch_size, args.num_workers)
+    dataset_path = os.path.abspath(args.dataset_path)  # Convert to absolute path
 
+    hr_dir = os.path.join(dataset_path, "DIV2K_train_HR")
+    lr_dir = os.path.join(dataset_path, "DIV2K_train_LR")
+
+    print(f"Using HR Path: {hr_dir}")  # Debugging
+    print(f"Using LR Path: {lr_dir}")  # Debugging
+
+    train_loader = get_data_loaders(hr_dir, lr_dir, args.batch_size, args.num_workers)
+    
     # Device setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
