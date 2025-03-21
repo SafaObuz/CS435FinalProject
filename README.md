@@ -1,34 +1,5 @@
-Help me with the training.
 
-My laptop only has 8 GB of RAM. It will take forever.
-
-How to train:
-
-You will run by command:
-
-for example:
-
-python train.py --batch_size 8 --num_epochs 20 --dataset_path './dataset' --save_model './model_epoch.pth' --num_workers 8
-
-
-quite similar for evaluation
-
-
-For the data set. I use the HR version on Kaggle.
-
-You can use my downscale.py to generate the LR version.
-
-
-Good luck.
-
-Lam Nguyen
-
-
-Safa:
-
-Mildy-professional README below. In progress
-
-# Project Name Here
+# Implementation of Dual Aggregation Transformer for Super-Resolution of Low Resolution Video
 
 ## Installation
 
@@ -56,6 +27,6 @@ to generate the low-resolution training and validation set.
 
 ## Training
 
-Safa: I ran this lol
+Example run command
 
 `python train.py --batch_size 16 --num_epochs 100 --dataset_path dataset --save_model './safa_100_epoch_results/model_epoch.pth' --num_workers 8`
